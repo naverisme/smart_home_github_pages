@@ -1,17 +1,13 @@
 const MQTT_CONFIG = {
-  // HiveMQ Public Broker
-  brokerURL: 'wss://broker.hivemq.com:8884/mqtt',
+  brokerURL: 'wss://d18c5dd25e7a4986abf418059d679cc2.s1.eu.hivemq.cloud:8884/mqtt',
+  clientId: 'esp32_web_' + Date.now() + '_' + Math.random().toString(36),
   
-  // Client ID (must be unique)
-  clientId: 'esp32_web_' + Math.random().toString(36).substr(2, 9),
-  
-  // Connection options
   connectOptions: {
     keepaliveInterval: 30,
     reconnectPeriod: 5000,
     clean: true,
-    username: '',
-    password: ''
+    username: 'user_1',  // ← ĐIỀN VÀO ĐÂY
+    password: 'Nguyenanhvu22052005'   // ← ĐIỀN VÀO ĐÂY
   },
 
   // Topics
