@@ -1,0 +1,371 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ============ Header ============ */
+.header {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  margin-bottom: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.header h1 {
+  font-size: 28px;
+  color: #333;
+}
+
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 15px;
+  background: #f0f0f0;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #999;
+  animation: pulse 2s infinite;
+}
+
+.dot.connected {
+  background: #28a745;
+  animation: pulse-green 2s infinite;
+}
+
+.dot.disconnected {
+  background: #dc3545;
+  animation: none;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes pulse-green {
+  0%, 100% { opacity: 1; box-shadow: 0 0 10px rgba(40, 167, 69, 0.5); }
+  50% { opacity: 0.7; }
+}
+
+.btn-reconnect {
+  padding: 8px 15px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.btn-reconnect:hover {
+  background: #764ba2;
+  transform: translateY(-2px);
+}
+
+/* ============ Sections ============ */
+.section {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  margin-bottom: 25px;
+}
+
+.section h2 {
+  font-size: 20px;
+  color: #333;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #667eea;
+}
+
+/* ============ Sensor Grid ============ */
+.sensor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
+}
+
+.sensor-card {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  transition: all 0.3s;
+  border: 2px solid transparent;
+}
+
+.sensor-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.sensor-card.warning {
+  background: linear-gradient(135deg, #fff5e1 0%, #ffe0b2 100%);
+  border-color: #ff9800;
+}
+
+.sensor-card.danger {
+  background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+  border-color: #f44336;
+}
+
+.sensor-icon {
+  font-size: 32px;
+  margin-bottom: 10px;
+}
+
+.sensor-name {
+  font-size: 12px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.sensor-value {
+  font-size: 28px;
+  font-weight: bold;
+  color: #333;
+}
+
+.sensor-unit {
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 10px;
+}
+
+.sensor-bar {
+  width: 100%;
+  height: 6px;
+  background: #ddd;
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 10px 0;
+}
+
+.bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  width: 50%;
+  transition: width 0.3s;
+}
+
+.sensor-range {
+  font-size: 11px;
+  color: #999;
+  margin-top: 8px;
+}
+
+/* ============ Control Grid ============ */
+.control-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+}
+
+.btn {
+  padding: 15px 25px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-transform: uppercase;
+}
+
+.btn-relay-on {
+  background: linear-gradient(135deg, #00b894 0%, #00a86b 100%);
+  color: white;
+}
+
+.btn-relay-on:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 184, 148, 0.4);
+}
+
+.btn-relay-off {
+  background: linear-gradient(135deg, #ff7675 0%, #d63031 100%);
+  color: white;
+}
+
+.btn-relay-off:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(255, 118, 117, 0.4);
+}
+
+/* ============ Charts ============ */
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.chart-container {
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #eee;
+}
+
+.chart-container h3 {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.chart-container canvas {
+  max-height: 250px;
+}
+
+/* ============ Alerts ============ */
+.alert-container {
+  display: grid;
+  gap: 10px;
+}
+
+.alert-item {
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid;
+  animation: slideIn 0.3s ease;
+}
+
+.alert-item.success {
+  background: #d4edda;
+  border-color: #28a745;
+  color: #155724;
+}
+
+.alert-item.warning {
+  background: #fff3cd;
+  border-color: #ffc107;
+  color: #856404;
+}
+
+.alert-item.danger {
+  background: #f8d7da;
+  border-color: #f44336;
+  color: #721c24;
+}
+
+.alert-item.info {
+  background: #d1ecf1;
+  border-color: #0c5460;
+  color: #0c5460;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* ============ Info Grid ============ */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #666;
+}
+
+.info-value {
+  color: #333;
+  font-weight: 700;
+}
+
+/* ============ Footer ============ */
+.footer {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  color: #666;
+  font-size: 13px;
+  margin-top: 30px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.footer p {
+  margin: 5px 0;
+}
+
+/* ============ Responsive ============ */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .header h1 {
+    font-size: 22px;
+  }
+
+  .section {
+    padding: 15px;
+  }
+
+  .sensor-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+
+  .sensor-value {
+    font-size: 24px;
+  }
+}

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏠 IoT Smart Home Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Chart.js for graphs -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <!-- MQTT.js -->
+  <script src="https://unpkg.com/mqtt@5.0.5/dist/mqtt.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <h1>🏠 Smart Home Dashboard</h1>
+      <div class="connection-status">
+        <span class="status-indicator">
+          <span class="dot" id="connectionDot"></span>
+          <span id="connectionText">Connecting...</span>
+        </span>
+        <button id="reconnectBtn" class="btn-reconnect">Reconnect</button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+      <!-- Real-time Sensors -->
+      <section class="section">
+        <h2>📊 Real-time Sensors</h2>
+        <div class="sensor-grid">
+          <!-- Temperature -->
+          <div class="sensor-card">
+            <div class="sensor-icon">🌡️</div>
+            <div class="sensor-name">Temperature</div>
+            <div class="sensor-value" id="tempValue">--</div>
+            <div class="sensor-unit">°C</div>
+            <div class="sensor-bar">
+              <div class="bar-fill" id="tempBar" style="width: 50%"></div>
+            </div>
+            <div class="sensor-range">0°C ~ 50°C</div>
+          </div>
+
+          <!-- Humidity -->
+          <div class="sensor-card">
+            <div class="sensor-icon">💧</div>
+            <div class="sensor-name">Humidity</div>
+            <div class="sensor-value" id="humidityValue">--</div>
+            <div class="sensor-unit">%</div>
+            <div class="sensor-bar">
+              <div class="bar-fill" id="humidityBar" style="width: 50%"></div>
+            </div>
+            <div class="sensor-range">0% ~ 100%</div>
+          </div>
+
+          <!-- Light -->
+          <div class="sensor-card">
+            <div class="sensor-icon">☀️</div>
+            <div class="sensor-name">Light</div>
+            <div class="sensor-value" id="lightValue">--</div>
+            <div class="sensor-unit">lux</div>
+            <div class="sensor-bar">
+              <div class="bar-fill" id="lightBar" style="width: 50%"></div>
+            </div>
+            <div class="sensor-range">0 ~ 65535 lux</div>
+          </div>
+
+          <!-- Gas -->
+          <div class="sensor-card">
+            <div class="sensor-icon">💨</div>
+            <div class="sensor-name">Gas Quality</div>
+            <div class="sensor-value" id="gasValue">--</div>
+            <div class="sensor-unit">ppm</div>
+            <div class="sensor-bar">
+              <div class="bar-fill" id="gasBar" style="width: 50%"></div>
+            </div>
+            <div class="sensor-range">0 ~ 500 ppm</div>
+          </div>
+
+          <!-- Motion -->
+          <div class="sensor-card">
+            <div class="sensor-icon">🚨</div>
+            <div class="sensor-name">Motion</div>
+            <div class="sensor-value" id="motionValue">--</div>
+            <div class="sensor-unit"></div>
+          </div>
+
+          <!-- Relay Status -->
+          <div class="sensor-card">
+            <div class="sensor-icon">🔌</div>
+            <div class="sensor-name">Relay</div>
+            <div class="sensor-value" id="relayValue">--</div>
+            <div class="sensor-unit"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Relay Control -->
+      <section class="section">
+        <h2>🎛️ Control</h2>
+        <div class="control-grid">
+          <button class="btn btn-relay-on" id="relayOnBtn" onclick="setRelay('ON')">
+            🟢 Relay ON
+          </button>
+          <button class="btn btn-relay-off" id="relayOffBtn" onclick="setRelay('OFF')">
+            🔴 Relay OFF
+          </button>
+        </div>
+      </section>
+
+      <!-- Historical Charts -->
+      <section class="section">
+        <h2>📈 Historical Data (24 Hours)</h2>
+        <div class="charts-grid">
+          <div class="chart-container">
+            <h3>Temperature Trend</h3>
+            anvas id="tempChart"></canvas>
+          </div>
+          <div class="chart-container">
+            <h3>Humidity Trend</h3>
+            anvas id="humidityChart"></canvas>
+          </div>
+          <div class="chart-container">
+            <h3>Light Level</h3>
+            anvas id="lightChart"></canvas>
+          </div>
+          <div class="chart-container">
+            <h3>Gas Quality</h3>
+            anvas id="gasChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Alerts -->
+      <section class="section">
+        <h2>🚨 Alerts & Warnings</h2>
+        <div id="alertContainer" class="alert-container">
+          <p>No alerts</p>
+        </div>
+      </section>
+
+      <!-- System Info -->
+      <section class="section">
+        <h2>ℹ️ System Information</h2>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">Last Update:</span>
+            <span class="info-value" id="lastUpdate">--</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Uptime:</span>
+            <span class="info-value" id="uptime">--</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Data Points:</span>
+            <span class="info-value" id="dataPoints">0</span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>ESP32 IoT Smart Home • Real-time MQTT Dashboard</p>
+      <p>Broker: HiveMQ Public Broker</p>
+    </footer>
+  </div>
+
+  <!-- Scripts -->
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
