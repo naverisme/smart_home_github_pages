@@ -1,5 +1,5 @@
 const MQTT_CONFIG = {
-  brokerURL: 'd18c5dd25e7a4986abf418059d679cc2.s1.eu.hivemq.cloud:8884/mqtt',
+  brokerURL: 'wss://d18c5dd25e7a4986abf418059d679cc2.s1.eu.hivemq.cloud:8884/mqtt',
   clientId: 'esp32_web_' + Date.now() + '_' + Math.random().toString(36),
   
   connectOptions: {
