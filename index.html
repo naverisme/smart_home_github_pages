@@ -202,12 +202,104 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
+
+        /* Login Screen Styles */
+        .login-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: var(--color-surface);
+            border-radius: 12px;
+            padding: 40px;
+            border: 1px solid var(--color-border);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .login-card h1 {
+            margin-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+            opacity: 0.7;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            color: var(--color-text);
+            font-size: 0.9rem;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+        }
+
+        .login-error {
+            color: var(--color-error);
+            font-size: 0.85rem;
+            margin-top: 10px;
+            min-height: 20px;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- Login Screen -->
+    <div id="login-screen" class="login-screen">
+        <div class="login-card">
+            <h1>🔐 IoT MQTT Monitor</h1>
+            <p style="opacity: 0.7; margin-bottom: 30px;">Secure Login Required</p>
+            <form id="login-form">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="login-username" placeholder="Enter username" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <div style="position: relative;">
+                        <input type="password" id="login-password" placeholder="Enter password" required autocomplete="current-password" style="padding-right: 45px;">
+                        <button type="button" id="toggle-password" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: transparent; border: none; cursor: pointer; padding: 5px; font-size: 1.2rem; opacity: 0.7;">
+                            👁️
+                        </button>
+                    </div>
+                </div>
+                <div id="login-error" class="login-error"></div>
+                <button type="submit" class="login-btn">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Dashboard (hidden by default) -->
+    <div id="dashboard" class="container" style="display: none;">
         <header>
-            <h1>🌐 IoT MQTT Monitor</h1>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h1>🌐 IoT MQTT Monitor</h1>
+                <button id="logout-btn" style="background: var(--color-error); padding: 8px 16px; font-size: 0.9rem;">Logout</button>
+            </div>
             <p>HiveMQ Cloud Integration</p>
         </header>
 
@@ -523,6 +615,92 @@
 
         // Initialize status
         updateStatus(false);
+
+        // ============================================
+        // AUTHENTICATION SYSTEM
+        // ============================================
+        const AUTH_USERNAME = 'user';
+        const AUTH_PASSWORD = '1';
+        const SESSION_KEY = 'iot_monitor_session';
+
+        const loginScreen = document.getElementById('login-screen');
+        const dashboard = document.getElementById('dashboard');
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        // Check if user is already logged in
+        function checkAuth() {
+            const session = sessionStorage.getItem(SESSION_KEY);
+            if (session === 'authenticated') {
+                showDashboard();
+            } else {
+                showLogin();
+            }
+        }
+
+        // Show login screen
+        function showLogin() {
+            loginScreen.style.display = 'flex';
+            dashboard.style.display = 'none';
+            // Disconnect MQTT if connected
+            if (client && client.connected) {
+                disconnectMQTT();
+            }
+        }
+
+        // Show dashboard
+        function showDashboard() {
+            loginScreen.style.display = 'none';
+            dashboard.style.display = 'block';
+        }
+
+        // Toggle password visibility
+        const togglePasswordBtn = document.getElementById('toggle-password');
+        const passwordInput = document.getElementById('login-password');
+        
+        togglePasswordBtn.addEventListener('click', () => {
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                togglePasswordBtn.textContent = '🙈';
+            } else {
+                passwordInput.type = 'password';
+                togglePasswordBtn.textContent = '👁️';
+            }
+        });
+
+        // Handle login
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
+            
+            console.log('Login attempt:', { username, password }); // Debug log
+            
+            if (username === AUTH_USERNAME && password === AUTH_PASSWORD) {
+                // Authentication successful
+                sessionStorage.setItem(SESSION_KEY, 'authenticated');
+                loginError.textContent = '';
+                showDashboard();
+                setTimeout(() => addLog('✅ Login successful'), 100);
+            } else {
+                // Authentication failed
+                loginError.textContent = '❌ Invalid username or password';
+                document.getElementById('login-password').value = '';
+                console.log('Expected:', { username: AUTH_USERNAME, password: AUTH_PASSWORD }); // Debug log
+            }
+        });
+
+        // Handle logout
+        logoutBtn.addEventListener('click', () => {
+            sessionStorage.removeItem(SESSION_KEY);
+            showLogin();
+            addLog('🔒 Logged out');
+        });
+
+        // Check authentication on page load
+        checkAuth();
     </script>
 </body>
 </html>
