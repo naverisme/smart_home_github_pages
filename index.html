@@ -1,174 +1,528 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🏠 IoT Smart Home Dashboard</title>
-  <link rel="stylesheet" href="style.css">
-  <!-- Chart.js for graphs -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-  <!-- MQTT.js -->
-  <script src="https://unpkg.com/mqtt@5.0.5/dist/mqtt.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT MQTT Monitor - HiveMQ</title>
+    <style>
+        :root {
+            --color-bg: #1f2121;
+            --color-surface: #262828;
+            --color-text: #f5f5f5;
+            --color-primary: #32b8c6;
+            --color-border: rgba(119, 124, 124, 0.3);
+            --color-success: #32b8c6;
+            --color-error: #ff5459;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .status-bar {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .status-item {
+            background: var(--color-surface);
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-indicator.connected {
+            background: var(--color-success);
+            box-shadow: 0 0 8px var(--color-success);
+        }
+
+        .status-indicator.disconnected {
+            background: var(--color-error);
+        }
+
+        .card {
+            background: var(--color-surface);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--color-border);
+        }
+
+        .card h2 {
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .sensor-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .sensor-card {
+            background: rgba(50, 184, 198, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(50, 184, 198, 0.3);
+        }
+
+        .sensor-label {
+            font-size: 0.85rem;
+            opacity: 0.7;
+            margin-bottom: 5px;
+        }
+
+        .sensor-value {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--color-primary);
+        }
+
+        .log-container {
+            max-height: 400px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .log-entry {
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(119, 124, 124, 0.2);
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .timestamp {
+            color: var(--color-primary);
+            margin-right: 10px;
+        }
+
+        .config-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .config-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .config-item label {
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+            opacity: 0.7;
+        }
+
+        .config-item input {
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            color: var(--color-text);
+            font-size: 0.9rem;
+        }
+
+        code {
+            background: rgba(50, 184, 198, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+
+        .sensor-card.relay-on {
+            background: rgba(50, 184, 198, 0.2);
+            border-color: var(--color-success);
+        }
+
+        .sensor-card.relay-off {
+            background: rgba(255, 84, 89, 0.1);
+            border-color: var(--color-error);
+        }
+
+        button {
+            padding: 10px 20px;
+            background: var(--color-primary);
+            color: var(--color-bg);
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Header -->
-    <header class="header">
-      <h1>🏠 Smart Home Dashboard</h1>
-      <div class="connection-status">
-        <span class="status-indicator">
-          <span class="dot" id="connectionDot"></span>
-          <span id="connectionText">Connecting...</span>
-        </span>
-        <button id="reconnectBtn" class="btn-reconnect">Reconnect</button>
-      </div>
-    </header>
+    <div class="container">
+        <header>
+            <h1>🌐 IoT MQTT Monitor</h1>
+            <p>HiveMQ Cloud Integration</p>
+        </header>
 
-    <!-- Main Content -->
-    <main class="main">
-      <!-- Real-time Sensors -->
-      <section class="section">
-        <h2>📊 Real-time Sensors</h2>
-        <div class="sensor-grid">
-          <!-- Temperature -->
-          <div class="sensor-card">
-            <div class="sensor-icon">🌡️</div>
-            <div class="sensor-name">Temperature</div>
-            <div class="sensor-value" id="tempValue">--</div>
-            <div class="sensor-unit">°C</div>
-            <div class="sensor-bar">
-              <div class="bar-fill" id="tempBar" style="width: 50%"></div>
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-indicator" id="mqtt-status"></span>
+                <span id="mqtt-status-text">Disconnected</span>
             </div>
-            <div class="sensor-range">0°C ~ 50°C</div>
-          </div>
-
-          <!-- Humidity -->
-          <div class="sensor-card">
-            <div class="sensor-icon">💧</div>
-            <div class="sensor-name">Humidity</div>
-            <div class="sensor-value" id="humidityValue">--</div>
-            <div class="sensor-unit">%</div>
-            <div class="sensor-bar">
-              <div class="bar-fill" id="humidityBar" style="width: 50%"></div>
+            <div class="status-item">
+                Last Update: <strong id="last-update">Never</strong>
             </div>
-            <div class="sensor-range">0% ~ 100%</div>
-          </div>
-
-          <!-- Light -->
-          <div class="sensor-card">
-            <div class="sensor-icon">☀️</div>
-            <div class="sensor-name">Light</div>
-            <div class="sensor-value" id="lightValue">--</div>
-            <div class="sensor-unit">lux</div>
-            <div class="sensor-bar">
-              <div class="bar-fill" id="lightBar" style="width: 50%"></div>
+            <div class="status-item">
+                Messages: <strong id="message-count">0</strong>
             </div>
-            <div class="sensor-range">0 ~ 65535 lux</div>
-          </div>
+        </div>
 
-          <!-- Gas -->
-          <div class="sensor-card">
-            <div class="sensor-icon">💨</div>
-            <div class="sensor-name">Gas Quality</div>
-            <div class="sensor-value" id="gasValue">--</div>
-            <div class="sensor-unit">ppm</div>
-            <div class="sensor-bar">
-              <div class="bar-fill" id="gasBar" style="width: 50%"></div>
+        <div class="card">
+            <h2>📊 Live Sensor Data</h2>
+            <div class="sensor-grid" id="sensor-grid">
+                <div class="sensor-card">
+                    <div class="sensor-label">Temperature</div>
+                    <div class="sensor-value" id="temp">--</div>
+                </div>
+                <div class="sensor-card">
+                    <div class="sensor-label">Humidity</div>
+                    <div class="sensor-value" id="humidity">--</div>
+                </div>
+                <div class="sensor-card">
+                    <div class="sensor-label">Gas Level</div>
+                    <div class="sensor-value" id="gas">--</div>
+                </div>
+                <div class="sensor-card">
+                    <div class="sensor-label">Light</div>
+                    <div class="sensor-value" id="light">--</div>
+                </div>
+                <div class="sensor-card">
+                    <div class="sensor-label">Motion</div>
+                    <div class="sensor-value" id="motion">--</div>
+                </div>
+                <div class="sensor-card">
+                    <div class="sensor-label">Relay Status</div>
+                    <div class="sensor-value" id="relay">--</div>
+                </div>
             </div>
-            <div class="sensor-range">0 ~ 500 ppm</div>
-          </div>
-
-          <!-- Motion -->
-          <div class="sensor-card">
-            <div class="sensor-icon">🚨</div>
-            <div class="sensor-name">Motion</div>
-            <div class="sensor-value" id="motionValue">--</div>
-            <div class="sensor-unit"></div>
-          </div>
-
-          <!-- Relay Status -->
-          <div class="sensor-card">
-            <div class="sensor-icon">🔌</div>
-            <div class="sensor-name">Relay</div>
-            <div class="sensor-value" id="relayValue">--</div>
-            <div class="sensor-unit"></div>
-          </div>
         </div>
-      </section>
 
-      <!-- Relay Control -->
-      <section class="section">
-        <h2>🎛️ Control</h2>
-        <div class="control-grid">
-          <button class="btn btn-relay-on" id="relayOnBtn" onclick="setRelay('ON')">
-            🟢 Relay ON
-          </button>
-          <button class="btn btn-relay-off" id="relayOffBtn" onclick="setRelay('OFF')">
-            🔴 Relay OFF
-          </button>
+        <div class="card">
+            <h2>🎛️ Relay Control</h2>
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <button id="relay-on-btn" style="flex: 1; background: var(--color-success);">Turn ON</button>
+                <button id="relay-off-btn" style="flex: 1; background: var(--color-error);">Turn OFF</button>
+            </div>
+            <div style="font-size: 0.9rem; opacity: 0.7; text-align: center;">
+                Publish to: <code>esp32/relay/cmd</code> | Subscribe: <code>esp32/relay/state</code>
+            </div>
         </div>
-      </section>
 
-      <!-- Historical Charts -->
-      <section class="section">
-        <h2>📈 Historical Data (24 Hours)</h2>
-        <div class="charts-grid">
-          <div class="chart-container">
-            <h3>Temperature Trend</h3>
-            anvas id="tempChart"></canvas>
-          </div>
-          <div class="chart-container">
-            <h3>Humidity Trend</h3>
-            anvas id="humidityChart"></canvas>
-          </div>
-          <div class="chart-container">
-            <h3>Light Level</h3>
-            anvas id="lightChart"></canvas>
-          </div>
-          <div class="chart-container">
-            <h3>Gas Quality</h3>
-            anvas id="gasChart"></canvas>
-          </div>
+        <div class="card">
+            <h2>⚙️ MQTT Configuration</h2>
+            <div class="config-section">
+                <div class="config-item">
+                    <label>Broker URL</label>
+                    <input type="text" id="broker" value="d18c5dd25e7a4986abf418059d679cc2.s1.eu.hivemq.cloud" readonly>
+                </div>
+                <div class="config-item">
+                    <label>Port</label>
+                    <input type="number" id="port" value="8884" readonly>
+                </div>
+                <div class="config-item">
+                    <label>Username</label>
+                    <input type="text" id="username" value="user_1" readonly>
+                </div>
+                <div class="config-item">
+                    <label>Base Topic</label>
+                    <input type="text" id="topic" value="esp32/#" readonly>
+                </div>
+            </div>
+            <button id="connect-btn">Connect to HiveMQ</button>
+            <button id="disconnect-btn" disabled>Disconnect</button>
         </div>
-      </section>
 
-      <!-- Alerts -->
-      <section class="section">
-        <h2>🚨 Alerts & Warnings</h2>
-        <div id="alertContainer" class="alert-container">
-          <p>No alerts</p>
+        <div class="card">
+            <h2>📜 Message Log</h2>
+            <div class="log-container" id="log-container">
+                <div class="log-entry">
+                    <span class="timestamp">[System]</span>
+                    <span>Waiting for connection...</span>
+                </div>
+            </div>
         </div>
-      </section>
+    </div>
 
-      <!-- System Info -->
-      <section class="section">
-        <h2>ℹ️ System Information</h2>
-        <div class="info-grid">
-          <div class="info-item">
-            <span class="info-label">Last Update:</span>
-            <span class="info-value" id="lastUpdate">--</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">Uptime:</span>
-            <span class="info-value" id="uptime">--</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">Data Points:</span>
-            <span class="info-value" id="dataPoints">0</span>
-          </div>
-        </div>
-      </section>
-    </main>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <script>
+        // MQTT Configuration
+        const BROKER = 'd18c5dd25e7a4986abf418059d679cc2.s1.eu.hivemq.cloud';
+        const PORT = 8884;
+        const USERNAME = 'user_1';
+        const PASSWORD = 'Nguyenanhvu22052005';
+        // MQTT Topics - Match ESP32 definitions
+        const TOPICS = {
+            SENSOR_TEMP: 'esp32/sensor/temp',
+            SENSOR_HUMIDITY: 'esp32/sensor/humidity',
+            SENSOR_LIGHT: 'esp32/sensor/light',
+            SENSOR_GAS: 'esp32/sensor/gas',
+            SENSOR_MOTION: 'esp32/sensor/motion',
+            RELAY_STATE: 'esp32/relay/state',
+            RELAY_CMD: 'esp32/relay/cmd',
+            ALERT: 'esp32/alert'
+        };
 
-    <!-- Footer -->
-    <footer class="footer">
-      <p>ESP32 IoT Smart Home • Real-time MQTT Dashboard</p>
-      <p>Broker: HiveMQ Public Broker</p>
-    </footer>
-  </div>
+        let client = null;
+        let messageCount = 0;
 
-  <!-- Scripts -->
-  <script src="config.js"></script>
-  <script src="app.js"></script>
+        // UI Elements
+        const mqttStatus = document.getElementById('mqtt-status');
+        const mqttStatusText = document.getElementById('mqtt-status-text');
+        const lastUpdate = document.getElementById('last-update');
+        const messageCountEl = document.getElementById('message-count');
+        const logContainer = document.getElementById('log-container');
+        const connectBtn = document.getElementById('connect-btn');
+        const disconnectBtn = document.getElementById('disconnect-btn');
+
+        // Sensor elements
+        const tempEl = document.getElementById('temp');
+        const humidityEl = document.getElementById('humidity');
+        const gasEl = document.getElementById('gas');
+        const lightEl = document.getElementById('light');
+        const motionEl = document.getElementById('motion');
+        const relayEl = document.getElementById('relay');
+        
+        // Relay buttons
+        const relayOnBtn = document.getElementById('relay-on-btn');
+        const relayOffBtn = document.getElementById('relay-off-btn');
+
+        // Add log entry
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `<span class="timestamp">[${timestamp}]</span> <span>${message}</span>`;
+            logContainer.insertBefore(entry, logContainer.firstChild);
+            
+            // Keep only last 50 entries
+            while (logContainer.children.length > 50) {
+                logContainer.removeChild(logContainer.lastChild);
+            }
+        }
+
+        // Update UI status
+        function updateStatus(connected) {
+            if (connected) {
+                mqttStatus.classList.add('connected');
+                mqttStatus.classList.remove('disconnected');
+                mqttStatusText.textContent = 'Connected';
+                connectBtn.disabled = true;
+                disconnectBtn.disabled = false;
+            } else {
+                mqttStatus.classList.remove('connected');
+                mqttStatus.classList.add('disconnected');
+                mqttStatusText.textContent = 'Disconnected';
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+            }
+        }
+
+        // Connect to MQTT
+        function connectMQTT() {
+            addLog('Connecting to HiveMQ Cloud...');
+            
+            const url = `wss://${BROKER}:${PORT}/mqtt`;
+            
+            client = mqtt.connect(url, {
+                username: USERNAME,
+                password: PASSWORD,
+                clientId: 'web-monitor-' + Math.random().toString(16).substr(2, 8),
+                clean: true,
+                reconnectPeriod: 5000
+            });
+
+            client.on('connect', () => {
+                addLog('✅ Connected to HiveMQ successfully!');
+                updateStatus(true);
+                
+                // Subscribe to all sensor topics
+                const subscribeTopics = [
+                    TOPICS.SENSOR_TEMP,
+                    TOPICS.SENSOR_HUMIDITY,
+                    TOPICS.SENSOR_LIGHT,
+                    TOPICS.SENSOR_GAS,
+                    TOPICS.SENSOR_MOTION,
+                    TOPICS.RELAY_STATE,
+                    TOPICS.ALERT
+                ];
+                
+                subscribeTopics.forEach(topic => {
+                    client.subscribe(topic, { qos: 1 }, (err) => {
+                        if (!err) {
+                            addLog(`✅ Subscribed: ${topic}`);
+                        } else {
+                            addLog(`❌ Failed: ${topic}`);
+                        }
+                    });
+                });
+            });
+
+            client.on('message', (topic, message) => {
+                try {
+                    messageCount++;
+                    messageCountEl.textContent = messageCount;
+                    lastUpdate.textContent = new Date().toLocaleTimeString();
+                    
+                    const payload = message.toString();
+                    
+                    // Route messages by topic
+                    switch(topic) {
+                        case TOPICS.SENSOR_TEMP:
+                            const temp = parseFloat(payload);
+                            tempEl.textContent = temp.toFixed(1) + '°C';
+                            addLog(`🌡️ Temperature: ${temp.toFixed(1)}°C`);
+                            break;
+                            
+                        case TOPICS.SENSOR_HUMIDITY:
+                            const humidity = parseFloat(payload);
+                            humidityEl.textContent = humidity.toFixed(1) + '%';
+                            addLog(`💧 Humidity: ${humidity.toFixed(1)}%`);
+                            break;
+                            
+                        case TOPICS.SENSOR_LIGHT:
+                            const light = parseFloat(payload);
+                            lightEl.textContent = light.toFixed(0) + ' lux';
+                            addLog(`💡 Light: ${light.toFixed(0)} lux`);
+                            break;
+                            
+                        case TOPICS.SENSOR_GAS:
+                            const gas = parseInt(payload);
+                            gasEl.textContent = gas + ' ppm';
+                            addLog(`☁️ Gas: ${gas} ppm`);
+                            break;
+                            
+                        case TOPICS.SENSOR_MOTION:
+                            const motion = payload === '1' || payload === 'true';
+                            motionEl.textContent = motion ? 'Detected' : 'Idle';
+                            addLog(`🚶 Motion: ${motion ? 'Detected' : 'Idle'}`);
+                            break;
+                            
+                        case TOPICS.RELAY_STATE:
+                            updateRelayStatus(payload);
+                            addLog(`🎛️ Relay: ${payload}`);
+                            break;
+                            
+                        case TOPICS.ALERT:
+                            addLog(`⚠️ ALERT: ${payload}`);
+                            break;
+                    }
+                } catch (e) {
+                    addLog(`⚠️ Error processing ${topic}: ${e.message}`);
+                }
+            });
+
+            client.on('error', (err) => {
+                addLog('❌ Connection error: ' + err.message);
+                updateStatus(false);
+            });
+
+            client.on('close', () => {
+                addLog('🔌 Disconnected from broker');
+                updateStatus(false);
+            });
+        }
+
+        // Update relay status UI
+        function updateRelayStatus(status) {
+            const isOn = status === 'ON' || status === true || status === 'true';
+            relayEl.textContent = isOn ? 'ON' : 'OFF';
+            
+            const relayCard = relayEl.closest('.sensor-card');
+            relayCard.classList.remove('relay-on', 'relay-off');
+            relayCard.classList.add(isOn ? 'relay-on' : 'relay-off');
+        }
+
+        // Control relay
+        function controlRelay(action) {
+            if (!client || !client.connected) {
+                addLog('❌ Not connected to MQTT broker');
+                return;
+            }
+            
+            // Send '1' for ON, '0' for OFF (matching ESP32 expectations)
+            const message = action === 'ON' ? '1' : '0';
+            client.publish(TOPICS.RELAY_CMD, message, { qos: 1 }, (err) => {
+                if (err) {
+                    addLog(`❌ Failed to send ${action} command`);
+                } else {
+                    addLog(`✅ Command sent: ${action} → ${TOPICS.RELAY_CMD}`);
+                }
+            });
+        }
+
+        // Disconnect from MQTT
+        function disconnectMQTT() {
+            if (client) {
+                client.end();
+                addLog('Disconnecting...');
+            }
+        }
+
+        // Event listeners
+        connectBtn.addEventListener('click', connectMQTT);
+        disconnectBtn.addEventListener('click', disconnectMQTT);
+        relayOnBtn.addEventListener('click', () => controlRelay('ON'));
+        relayOffBtn.addEventListener('click', () => controlRelay('OFF'));
+
+        // Initialize status
+        updateStatus(false);
+    </script>
 </body>
 </html>
