@@ -1,0 +1,2 @@
+// Configuration - Obfuscated
+const MQTT_CONFIG={BROKER:'d18c5dd25e7a4986abf418059d679cc2.s1.eu.hivemq.cloud',PORT:8884,USERNAME:'user_1',PASSWORD:'Nguyenanhvu22052005',CLIENT_ID_PREFIX:'web-dashboard-'};const TOPICS={SENSORS_DATA:'home/sensors/data',RELAY_STATUS:'home/relay/status',RELAY_CONTROL:'home/relay/control',ALERT:'home/alert'};const AUTH_CONFIG={USERNAME:'user',PASSWORD:'1',SESSION_KEY:'iot_session'};const UI_CONFIG={MAX_LOG_ENTRIES:50};
